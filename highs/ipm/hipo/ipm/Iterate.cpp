@@ -579,6 +579,12 @@ void Iterate::makeStep(double alpha_primal, double alpha_dual) {
   else
     bad_iter_ = 0;
 
+  // experiment: count iterations in which neither step moves
+  if (std::max(alpha_primal, alpha_dual) < 1e-3)
+    ++dead_iter_;
+  else
+    dead_iter_ = 0;
+
   vectorAdd(x, delta.x, alpha_primal);
   vectorAdd(xl, delta.xl, alpha_primal);
   vectorAdd(xu, delta.xu, alpha_primal);
@@ -594,7 +600,7 @@ bool Iterate::stagnation(std::stringstream& log_stream) {
     const char* e = std::getenv("HIPO_MAX_BAD_ITER");
     return e ? static_cast<Int>(std::atoi(e)) : kMaxBadIter;
   }();
-  bool stagnation = (bad_iter_ >= max_bad_iter);
+  bool stagnation = (bad_iter_ >= max_bad_iter) || (dead_iter_ >= 3);
 
   // the next tests are aimed at problems where things are going
   // catastrophically bad, which may continue iterating forever otherwise.
