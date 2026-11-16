@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "Iterate.h"
 
 #include "Parameters.h"
@@ -648,7 +649,12 @@ bool Iterate::resetBest(Int iter) {
 
 bool Iterate::stagnation(std::stringstream& log_stream) {
   // too many iterations in a row with small stepsize
-  bool stagnation = (bad_iter_ >= kMaxBadIter);
+  // experiment: the limit on short steps in a row from the environment (HIPO_MAX_BAD_ITER), default kMaxBadIter
+  static const Int max_bad_iter = []() {
+    const char* e = std::getenv("HIPO_MAX_BAD_ITER");
+    return e ? static_cast<Int>(std::atoi(e)) : kMaxBadIter;
+  }();
+  bool stagnation = (bad_iter_ >= max_bad_iter);
 
   // the next tests are aimed at problems where things are going
   // catastrophically bad, which may continue iterating forever otherwise.
