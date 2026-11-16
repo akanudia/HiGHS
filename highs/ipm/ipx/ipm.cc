@@ -1,3 +1,4 @@
+#include <sstream>
 #include "ipm/ipx/ipm.h"
 #include <algorithm>
 #include <cmath>
@@ -36,6 +37,7 @@ void IPM::StartingPoint(KKTSolver* kkt, Iterate* iterate, Info* info) {
         info->errflag = 0;
         info->status_ipm = IPX_STATUS_time_limit;
     } else if (info->errflag) {
+        { std::stringstream h_err; h_err << " IPM failed, errflag " << info->errflag << std::endl; control_.hLog(h_err); }
         info->status_ipm = IPX_STATUS_failed;
     } else {
         info->status_ipm = IPX_STATUS_not_run;
@@ -110,6 +112,7 @@ void IPM::Driver(KKTSolver* kkt, Iterate* iterate, Info* info) {
             info->errflag = 0;
             info->status_ipm = IPX_STATUS_time_limit;
         } else {
+            { std::stringstream h_err; h_err << " IPM failed, errflag " << info->errflag << std::endl; control_.hLog(h_err); }
             info->status_ipm = IPX_STATUS_failed;
         }
     }
