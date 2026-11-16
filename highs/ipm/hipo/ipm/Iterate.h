@@ -48,6 +48,7 @@ struct Iterate {
 
   // statistics for stagnation
   Int bad_iter_{};
+  Int dead_iter_{};  // experiment: iterations in a row with no step at all
   double largest_dx_x_{}, largest_dy_y_{};
   double best_pinf_ = kHighsInf, best_dinf_ = kHighsInf;
 
