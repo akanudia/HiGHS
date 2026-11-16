@@ -1,3 +1,4 @@
+#include <sstream>
 #include "ipm/ipx/lp_solver.h"
 #include <algorithm>
 #include <cassert>
@@ -57,6 +58,15 @@ Int LpSolver::Solve() {
     control_.hLog("IPX version 1.0\n");
 
     InteriorPointSolve();
+    // experiment: the interior point failed at once from a starting point that was given (the
+    // conjugate residuals find the matrix not positive definite, errflag 202): treat the point
+    // as an imprecise interior solution, so that crossover is run from it
+    if (info_.status_ipm == IPX_STATUS_failed && x_start_.size() != 0 && basis_ &&
+        control_.run_crossover() != 0) {
+        control_.hLog(" Interior point failed from the given starting point: crossover from that point\n");
+        info_.errflag = 0;
+        info_.status_ipm = IPX_STATUS_imprecise;
+    }
 
     const bool run_crossover_on = control_.run_crossover() == 1;
     const bool run_crossover_choose = control_.run_crossover() == -1;
@@ -524,6 +534,11 @@ void LpSolver::BuildStartingBasis() {
         info_.status_ipm = IPX_STATUS_time_limit;
         return;
     } else if (info_.errflag) {
+        {  // experiment: say which error ended the starting basis
+            std::stringstream h_err;
+            h_err << " Starting basis failed, errflag " << info_.errflag << std::endl;
+            control_.hLog(h_err);
+        }
         info_.status_ipm = IPX_STATUS_failed;
         return;
     }
