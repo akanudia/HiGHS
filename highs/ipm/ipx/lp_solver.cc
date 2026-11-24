@@ -61,9 +61,17 @@ Int LpSolver::Solve() {
     // experiment: the interior point failed at once from a starting point that was given (the
     // conjugate residuals find the matrix not positive definite, errflag 202): treat the point
     // as an imprecise interior solution, so that crossover is run from it
-    if (info_.status_ipm == IPX_STATUS_failed && x_start_.size() != 0 && basis_ &&
-        control_.run_crossover() != 0) {
-        control_.hLog(" Interior point failed from the given starting point: crossover from that point\n");
+    if ((info_.status_ipm == IPX_STATUS_failed ||
+         info_.status_ipm == IPX_STATUS_no_progress) &&
+        x_start_.size() != 0 && basis_ && control_.run_crossover() != 0) {
+        // the same when it made no progress from that point: the given point is put back first
+        if (info_.status_ipm == IPX_STATUS_no_progress) {
+            control_.hLog(" Interior point made no progress from the given starting point: crossover from that point\n");
+            iterate_->Initialize(x_start_, xl_start_, xu_start_,
+                                 y_start_, zl_start_, zu_start_);
+        } else {
+            control_.hLog(" Interior point failed from the given starting point: crossover from that point\n");
+        }
         info_.errflag = 0;
         info_.status_ipm = IPX_STATUS_imprecise;
     }
